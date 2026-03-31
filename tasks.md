@@ -3,8 +3,8 @@
 ## Phase 1 - 백엔드 기본 API + 최소 프론트엔드
 
 ### Backend
-- [ ] `application.yml` 설정 (H2 datasource, JPA ddl-auto, H2 콘솔 활성화)
-- [ ] `Reminder` Entity 생성 (id, title, completed, createdAt, updatedAt)
+- [x] `application.yml` 설정 (H2 datasource, JPA ddl-auto, H2 콘솔 활성화)
+- [x] `Reminder` Entity 생성 (id, title, completed, createdAt, updatedAt)
 - [ ] `ReminderRepository` 생성 (JpaRepository)
 - [ ] `ReminderService` 생성 (CRUD + 완료 토글 로직)
 - [ ] `ReminderController` 생성
