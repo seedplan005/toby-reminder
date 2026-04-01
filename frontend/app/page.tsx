@@ -42,15 +42,23 @@ function smartFilterParams(filter: string): Record<string, string> {
 export default function HomePage() {
   const { lists, selection, refreshLists } = useApp();
 
+  const key = selection
+    ? selection.type === "list"
+      ? `list-${selection.id}`
+      : `smart-${selection.filter}`
+    : "home";
+
   if (selection?.type === "list") {
     const list = lists.find((l) => l.id === selection.id);
     return (
-      <ReminderListView
-        listId={selection.id}
-        listColor={list?.color}
-        title={list?.name ?? "리마인더"}
-        onReminderCountChange={refreshLists}
-      />
+      <div key={key} className="main-content-transition" style={{ height: "100%", overflow: "hidden" }}>
+        <ReminderListView
+          listId={selection.id}
+          listColor={list?.color}
+          title={list?.name ?? "리마인더"}
+          onReminderCountChange={refreshLists}
+        />
+      </div>
     );
   }
 
@@ -65,14 +73,20 @@ export default function HomePage() {
     if (raw.dueBefore !== undefined) filterParams.dueBefore = raw.dueBefore;
 
     return (
-      <ReminderListView
-        filterParams={filterParams}
-        listColor={SMART_LIST_COLORS[filter]}
-        title={SMART_LIST_LABELS[filter] ?? filter}
-        onReminderCountChange={refreshLists}
-      />
+      <div key={key} className="main-content-transition" style={{ height: "100%", overflow: "hidden" }}>
+        <ReminderListView
+          filterParams={filterParams}
+          listColor={SMART_LIST_COLORS[filter]}
+          title={SMART_LIST_LABELS[filter] ?? filter}
+          onReminderCountChange={refreshLists}
+        />
+      </div>
     );
   }
 
-  return <HomeScreen />;
+  return (
+    <div key={key} className="main-content-transition" style={{ height: "100%", overflow: "hidden" }}>
+      <HomeScreen />
+    </div>
+  );
 }

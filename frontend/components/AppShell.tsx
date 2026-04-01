@@ -1,32 +1,48 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useApp } from "@/context/AppContext";
 import Sidebar from "./Sidebar";
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const { sidebarOpen, setSidebarOpen } = useApp();
 
+  // Auto-close sidebar on mobile
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const handler = (e: MediaQueryListEvent) => {
+      if (e.matches) setSidebarOpen(false);
+    };
+    if (mq.matches) setSidebarOpen(false);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
   return (
-    <div
-      style={{
-        display: "flex",
-        height: "100vh",
-        overflow: "hidden",
-        background: "var(--bg)",
-      }}
-    >
+    <div className="app-shell">
       {/* Sidebar */}
       <div
-        style={{
-          width: sidebarOpen ? 250 : 0,
-          overflow: "hidden",
-          transition: "width 0.2s ease",
-          flexShrink: 0,
-        }}
+        className="app-sidebar-wrapper"
+        data-open={sidebarOpen ? "true" : "false"}
+        style={{ width: sidebarOpen ? 250 : 0 }}
       >
         <Sidebar />
       </div>
+
+      {/* Mobile overlay backdrop */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            display: "none",
+            position: "fixed",
+            inset: 0,
+            zIndex: 99,
+            background: "rgba(0,0,0,0.3)",
+          }}
+          className="mobile-backdrop"
+        />
+      )}
 
       {/* Main content */}
       <main

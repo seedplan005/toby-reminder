@@ -99,6 +99,47 @@ body {
   animation: fadeOut 0.5s ease forwards;
 }
 
+/* List transition */
+.main-content-transition {
+  animation: contentFadeIn 0.15s ease-out;
+}
+
+@keyframes contentFadeIn {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Responsive layout */
+.app-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.app-sidebar-wrapper {
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: width 0.2s ease;
+}
+
+@media (max-width: 767px) {
+  .app-sidebar-wrapper {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
+    z-index: 100;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.15);
+  }
+  .app-sidebar-wrapper[data-open="false"] {
+    box-shadow: none;
+  }
+  .mobile-backdrop {
+    display: block !important;
+  }
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

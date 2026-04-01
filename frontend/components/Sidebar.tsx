@@ -47,6 +47,22 @@ export default function Sidebar() {
   } | null>(null);
   const [counts, setCounts] = useState<ReminderCounts | null>(null);
   const [search, setSearch] = useState("");
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const dark = stored ? stored === "dark" : prefersDark;
+    setIsDark(dark);
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+  }, []);
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.dataset.theme = next ? "dark" : "light";
+    localStorage.setItem("theme", next ? "dark" : "light");
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -209,8 +225,8 @@ export default function Sidebar() {
           )}
         </div>
 
-        {/* Add list button */}
-        <div style={{ padding: "12px 16px", borderTop: "1px solid var(--border)" }}>
+        {/* Add list button + dark mode toggle */}
+        <div style={{ padding: "12px 16px", borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button
             onClick={() => setShowCreateModal(true)}
             style={{
@@ -221,6 +237,17 @@ export default function Sidebar() {
           >
             <span style={{ fontSize: 20, lineHeight: 1 }}>+</span>
             목록 추가
+          </button>
+          <button
+            onClick={toggleTheme}
+            style={{
+              background: "transparent", border: "none", cursor: "pointer",
+              fontSize: 18, padding: 4, borderRadius: 6, lineHeight: 1,
+              color: "var(--text-secondary)",
+            }}
+            aria-label={isDark ? "라이트 모드" : "다크 모드"}
+          >
+            {isDark ? "☀️" : "🌙"}
           </button>
         </div>
       </aside>
@@ -314,13 +341,19 @@ function SortableListItem({
     >
       <div
         style={{
-          width: 10,
-          height: 10,
+          width: 22,
+          height: 22,
           borderRadius: "50%",
           background: list.color,
           flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 13,
         }}
-      />
+      >
+        {list.icon && <span>{list.icon}</span>}
+      </div>
       <span style={{ flex: 1, fontSize: 15, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
         {list.name}
       </span>

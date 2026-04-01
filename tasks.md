@@ -126,12 +126,12 @@
 ## Phase 6 - 다크모드 + 반응형 + 마무리
 
 ### Frontend
-- [ ] CSS custom properties 기반 다크모드 색상 체계
-- [ ] `prefers-color-scheme` 자동 감지
-- [ ] 다크모드 수동 토글 버튼 (사이드바 하단)
-- [ ] 반응형: Desktop (>1024px) - 사이드바 + 메인 + 상세 패널
-- [ ] 반응형: Tablet (768-1024px) - 사이드바 접힘 가능 + 메인
-- [ ] 반응형: Mobile (<768px) - 화면 전환 네비게이션 스택
-- [ ] 리스트 아이콘 선택 UI (생성/편집 모달)
-- [ ] 전체 UI Apple 디자인 일관성 최종 점검
-- [ ] Phase 6 통합 테스트
+- [x] CSS custom properties 기반 다크모드 색상 체계
+- [x] `prefers-color-scheme` 자동 감지
+- [x] 다크모드 수동 토글 버튼 (사이드바 하단)
+- [x] 반응형: Desktop (>1024px) - 사이드바 + 메인 + 상세 패널
+- [x] 반응형: Tablet (768-1024px) - 사이드바 접힘 가능 + 메인
+- [x] 반응형: Mobile (<768px) - 사이드바 오버레이 + 백드롭
+- [x] 리스트 아이콘 선택 UI (생성/편집 모달)
+- [x] 전체 UI Apple 디자인 일관성 최종 점검
+- [x] Phase 6 통합 테스트
