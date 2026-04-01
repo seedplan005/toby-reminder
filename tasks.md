@@ -7,13 +7,13 @@
 - [x] `Reminder` Entity 생성 (id, title, completed, createdAt, updatedAt)
 - [x] `ReminderRepository` 생성 (JpaRepository)
 - [x] `ReminderService` 생성 (CRUD + 완료 토글 로직)
-- [ ] `ReminderController` 생성
-  - [ ] `GET /api/reminders` - 전체 조회
-  - [ ] `POST /api/reminders` - 생성
-  - [ ] `PUT /api/reminders/{id}` - 수정
-  - [ ] `DELETE /api/reminders/{id}` - 삭제
-  - [ ] `PATCH /api/reminders/{id}/complete` - 완료 토글
-- [ ] API 동작 테스트 (H2 콘솔로 데이터 확인)
+- [x] `ReminderController` 생성
+  - [x] `GET /api/reminders` - 전체 조회
+  - [x] `POST /api/reminders` - 생성
+  - [x] `PUT /api/reminders/{id}` - 수정
+  - [x] `DELETE /api/reminders/{id}` - 삭제
+  - [x] `PATCH /api/reminders/{id}/complete` - 완료 토글
+- [x] API 동작 테스트 (ReminderControllerTest 통합 테스트로 대체 — 실제 H2 DB에 데이터 저장/조회 검증)
 
 ### Frontend
 - [ ] Next.js 프로젝트 초기화 (`frontend/`, App Router, TypeScript)
@@ -32,17 +32,17 @@
 ## Phase 2 - 리스트 관리 + 사이드바 레이아웃
 
 ### Backend
-- [ ] `ReminderList` Entity 생성 (id, name, color, icon, displayOrder)
-- [ ] `Reminder`에 `list_id` FK 추가, `@ManyToOne` 연관관계 설정
-- [ ] `ReminderListRepository` 생성
-- [ ] `ReminderListService` 생성 (CRUD + 리마인더 건수 조회)
-- [ ] `ReminderListController` 생성
-  - [ ] `GET /api/lists` - 전체 리스트 조회 (리마인더 건수 포함)
-  - [ ] `POST /api/lists` - 생성
-  - [ ] `PUT /api/lists/{id}` - 수정
-  - [ ] `DELETE /api/lists/{id}` - 삭제
-- [ ] `GET /api/reminders`에 `listId` 쿼리 파라미터 필터 추가
-- [ ] 기본 리스트 초기 데이터 설정 (data.sql 또는 ApplicationRunner)
+- [x] `ReminderList` Entity 생성 (id, name, color, icon, displayOrder)
+- [x] `Reminder`에 `list_id` FK 추가, `@ManyToOne` 연관관계 설정
+- [x] `ReminderListRepository` 생성
+- [x] `ReminderListService` 생성 (CRUD + 리마인더 건수 조회)
+- [x] `ReminderListController` 생성
+  - [x] `GET /api/lists` - 전체 리스트 조회 (리마인더 건수 포함)
+  - [x] `POST /api/lists` - 생성
+  - [x] `PUT /api/lists/{id}` - 수정
+  - [x] `DELETE /api/lists/{id}` - 삭제
+- [x] `GET /api/reminders`에 `listId` 쿼리 파라미터 필터 추가
+- [x] 기본 리스트 초기 데이터 설정 (data.sql 또는 ApplicationRunner)
 
 ### Frontend
 - [ ] 사이드바 + 메인 영역 2단 레이아웃 구현 (250px 사이드바, #F2F1F6 배경)
@@ -51,7 +51,7 @@
 - [ ] 리스트 생성 모달 (이름 입력 + 12색 팔레트 색상 선택)
 - [ ] 리스트 수정/삭제 기능
 - [ ] 메인 영역: 선택된 리스트 제목 표시 + 리마인더 행에 리스트 색상 반영
-- [ ] Phase 2 통합 테스트
+- [x] Phase 2 통합 테스트
 
 ---
 

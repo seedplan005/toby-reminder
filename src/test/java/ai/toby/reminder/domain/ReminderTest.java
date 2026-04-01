@@ -52,4 +52,44 @@ class ReminderTest {
         reminder.toggleComplete();
         assertThat(reminder.isCompleted()).isFalse();
     }
+
+    @Test
+    @DisplayName("list와 함께 생성하면 list가 설정된다")
+    void createWithList() {
+        ReminderList list = new ReminderList("업무", "#007AFF", "briefcase.fill", 0);
+
+        Reminder reminder = new Reminder("회의 준비", list);
+
+        assertThat(reminder.getList()).isEqualTo(list);
+    }
+
+    @Test
+    @DisplayName("assignList하면 list가 변경되고 updatedAt이 갱신된다")
+    void assignList() throws Exception {
+        Reminder reminder = new Reminder("장보기");
+        ReminderList list = new ReminderList("업무", "#007AFF", "briefcase.fill", 0);
+        var originalUpdatedAt = reminder.getUpdatedAt();
+
+        Thread.sleep(10);
+
+        reminder.assignList(list);
+
+        assertThat(reminder.getList()).isEqualTo(list);
+        assertThat(reminder.getUpdatedAt()).isAfter(originalUpdatedAt);
+    }
+
+    @Test
+    @DisplayName("removeList하면 list가 null이 되고 updatedAt이 갱신된다")
+    void removeList() throws Exception {
+        ReminderList list = new ReminderList("업무", "#007AFF", "briefcase.fill", 0);
+        Reminder reminder = new Reminder("회의 준비", list);
+        var originalUpdatedAt = reminder.getUpdatedAt();
+
+        Thread.sleep(10);
+
+        reminder.removeList();
+
+        assertThat(reminder.getList()).isNull();
+        assertThat(reminder.getUpdatedAt()).isAfter(originalUpdatedAt);
+    }
 }

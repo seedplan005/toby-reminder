@@ -1,5 +1,7 @@
 package ai.toby.reminder.controller;
 
+import ai.toby.reminder.domain.ReminderList;
+import ai.toby.reminder.domain.ReminderListRepository;
 import ai.toby.reminder.domain.ReminderRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,9 +39,13 @@ class ReminderControllerTest {
     @Autowired
     private ReminderRepository reminderRepository;
 
+    @Autowired
+    private ReminderListRepository reminderListRepository;
+
     @BeforeEach
     void setUp() {
         reminderRepository.deleteAll();
+        reminderListRepository.deleteAll();
     }
 
     @Test
@@ -145,5 +151,37 @@ class ReminderControllerTest {
         mockMvc.perform(patch("/api/reminders/{id}/complete", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.completed").value(true));
+    }
+
+    @Test
+    @DisplayName("GET /api/reminders?listId - 해당 리스트의 리마인더만 반환한다")
+    void findAllByListId() throws Exception {
+        ReminderList list = reminderListRepository.save(new ReminderList("업무", "#007AFF", null, 0));
+        mockMvc.perform(post("/api/reminders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("title", "업무 리마인더", "listId", list.getId()))))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/api/reminders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("title", "리스트 없는 리마인더"))))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/reminders").param("listId", list.getId().toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].title").value("업무 리마인더"))
+                .andExpect(jsonPath("$[0].listId").value(list.getId()));
+    }
+
+    @Test
+    @DisplayName("POST /api/reminders with listId - 응답에 listId가 포함된다")
+    void createWithListId() throws Exception {
+        ReminderList list = reminderListRepository.save(new ReminderList("업무", "#007AFF", null, 0));
+
+        mockMvc.perform(post("/api/reminders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("title", "회의 준비", "listId", list.getId()))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.listId").value(list.getId()));
     }
 }

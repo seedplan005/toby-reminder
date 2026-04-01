@@ -1,6 +1,8 @@
 package ai.toby.reminder.service;
 
 import ai.toby.reminder.domain.Reminder;
+import ai.toby.reminder.domain.ReminderList;
+import ai.toby.reminder.domain.ReminderListRepository;
 import ai.toby.reminder.domain.ReminderRepository;
 import ai.toby.reminder.service.port.input.ReminderService;
 import org.junit.jupiter.api.DisplayName;
@@ -24,6 +26,9 @@ class ReminderServiceTest {
 
     @Autowired
     private ReminderRepository reminderRepository;
+
+    @Autowired
+    private ReminderListRepository reminderListRepository;
 
     @Test
     @DisplayName("create는 새 리마인더를 저장하고 반환한다")
@@ -91,5 +96,29 @@ class ReminderServiceTest {
         Reminder result = reminderService.toggleComplete(saved.getId());
 
         assertThat(result.isCompleted()).isTrue();
+    }
+
+    @Test
+    @DisplayName("findAllByListId는 해당 리스트의 리마인더만 반환한다")
+    void findAllByListId() {
+        ReminderList list = reminderListRepository.save(new ReminderList("업무", "#007AFF", null, 0));
+        reminderService.create("업무 리마인더", list.getId());
+        reminderService.create("리스트 없는 리마인더");
+
+        List<Reminder> result = reminderService.findAllByListId(list.getId());
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().getTitle()).isEqualTo("업무 리마인더");
+    }
+
+    @Test
+    @DisplayName("create with listId는 list가 설정된 리마인더를 생성한다")
+    void createWithListId() {
+        ReminderList list = reminderListRepository.save(new ReminderList("업무", "#007AFF", null, 0));
+
+        Reminder result = reminderService.create("회의 준비", list.getId());
+
+        assertThat(result.getList()).isNotNull();
+        assertThat(result.getList().getId()).isEqualTo(list.getId());
     }
 }

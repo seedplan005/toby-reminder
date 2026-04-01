@@ -11,13 +11,113 @@ servers:
 tags:
   - name: reminders
     description: 리마인더 관리
+  - name: lists
+    description: 리스트 관리
 
 paths:
+  /api/lists:
+    get:
+      tags: [lists]
+      summary: 전체 리스트 조회
+      operationId: findAllLists
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReminderListResponse'
+
+    post:
+      tags: [lists]
+      summary: 리스트 생성
+      operationId: createList
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReminderListRequest'
+      responses:
+        '201':
+          description: 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderListResponse'
+        '400':
+          description: 잘못된 요청 (name 누락 또는 빈 값)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/lists/{id}:
+    put:
+      tags: [lists]
+      summary: 리스트 수정
+      operationId: updateList
+      parameters:
+        - $ref: '#/components/parameters/listId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateReminderListRequest'
+      responses:
+        '200':
+          description: 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderListResponse'
+        '400':
+          description: 잘못된 요청
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 리스트 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [lists]
+      summary: 리스트 삭제
+      operationId: deleteList
+      description: 리스트를 삭제합니다. 연관된 리마인더는 삭제되지 않고 리스트 미지정 상태가 됩니다.
+      parameters:
+        - $ref: '#/components/parameters/listId'
+      responses:
+        '204':
+          description: 삭제 성공
+        '404':
+          description: 리스트 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/reminders:
     get:
       tags: [reminders]
       summary: 전체 리마인더 조회
       operationId: findAllReminders
+      parameters:
+        - name: listId
+          in: query
+          required: false
+          description: 특정 리스트의 리마인더만 조회
+          schema:
+            type: integer
+            format: int64
+            example: 1
       responses:
         '200':
           description: 조회 성공
@@ -27,6 +127,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ReminderResponse'
+        '404':
+          description: 지정한 listId가 존재하지 않음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
     post:
       tags: [reminders]
@@ -47,6 +153,12 @@ paths:
                 $ref: '#/components/schemas/ReminderResponse'
         '400':
           description: 잘못된 요청 (title 누락 또는 빈 값)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: 지정한 listId가 존재하지 않음
           content:
             application/json:
               schema:
@@ -154,7 +266,79 @@ components:
         format: int64
         example: 1
 
+    listId:
+      name: id
+      in: path
+      required: true
+      description: 리스트 ID
+      schema:
+        type: integer
+        format: int64
+        example: 1
+
   schemas:
+    CreateReminderListRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          example: 업무
+        color:
+          type: string
+          example: "#007AFF"
+        icon:
+          type: string
+          example: briefcase.fill
+
+    UpdateReminderListRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          example: 개인
+        color:
+          type: string
+          example: "#34C759"
+        icon:
+          type: string
+          example: person.fill
+
+    ReminderListResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: 업무
+        color:
+          type: string
+          example: "#007AFF"
+        icon:
+          type: string
+          example: briefcase.fill
+        displayOrder:
+          type: integer
+          example: 0
+        reminderCount:
+          type: integer
+          format: int64
+          example: 3
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-04-01T10:00:00'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-04-01T10:00:00'
+
     CreateReminderRequest:
       type: object
       required: [title]
@@ -163,6 +347,11 @@ components:
           type: string
           minLength: 1
           example: 장보기
+        listId:
+          type: integer
+          format: int64
+          nullable: true
+          example: 1
 
     UpdateReminderRequest:
       type: object
@@ -186,6 +375,11 @@ components:
         completed:
           type: boolean
           example: false
+        listId:
+          type: integer
+          format: int64
+          nullable: true
+          example: 1
         createdAt:
           type: string
           format: date-time

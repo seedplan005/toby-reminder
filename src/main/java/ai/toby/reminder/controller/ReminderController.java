@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.web.bind.annotation.RequestParam;
+
 import java.util.List;
 
 @RestController
@@ -28,8 +30,11 @@ public class ReminderController {
     private final ReminderService reminderService;
 
     @GetMapping
-    public List<ReminderResponse> findAll() {
-        return reminderService.findAll().stream()
+    public List<ReminderResponse> findAll(@RequestParam(required = false) Long listId) {
+        List<ai.toby.reminder.domain.Reminder> reminders = (listId != null)
+                ? reminderService.findAllByListId(listId)
+                : reminderService.findAll();
+        return reminders.stream()
                 .map(ReminderResponse::from)
                 .toList();
     }
@@ -42,7 +47,10 @@ public class ReminderController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ReminderResponse create(@RequestBody @Valid CreateReminderRequest request) {
-        return ReminderResponse.from(reminderService.create(request.title()));
+        var reminder = (request.listId() != null)
+                ? reminderService.create(request.title(), request.listId())
+                : reminderService.create(request.title());
+        return ReminderResponse.from(reminder);
     }
 
     @PutMapping("/{id}")
