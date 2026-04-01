@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f2f1f6;
+  --surface: #ffffff;
+  --surface-hover: #f2f1f6;
+  --border: #e5e5ea;
+  --text-primary: #1c1c1e;
+  --text-secondary: #8e8e93;
+  --text-placeholder: #aeaeb2;
+  --accent-blue: #007aff;
+  --accent-red: #ff3b30;
+  --accent-green: #34c759;
+  --accent-orange: #ff9500;
+  --accent-gray: #8e8e93;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1c1e;
+    --surface: #2c2c2e;
+    --surface-hover: #3a3a3c;
+    --border: #3a3a3c;
+    --text-primary: #ffffff;
+    --text-secondary: #8e8e93;
+    --text-placeholder: #48484a;
+  }
+}
+
+[data-theme="dark"] {
+  --bg: #1c1c1e;
+  --surface: #2c2c2e;
+  --surface-hover: #3a3a3c;
+  --border: #3a3a3c;
+  --text-primary: #ffffff;
+  --text-secondary: #8e8e93;
+  --text-placeholder: #48484a;
+}
+
+[data-theme="light"] {
+  --bg: #f2f1f6;
+  --surface: #ffffff;
+  --surface-hover: #f2f1f6;
+  --border: #e5e5ea;
+  --text-primary: #1c1c1e;
+  --text-secondary: #8e8e93;
+  --text-placeholder: #aeaeb2;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Checkbox circle */
+.reminder-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  background: transparent;
+}
+
+.reminder-check:hover {
+  border-color: var(--text-secondary);
+}
+
+.reminder-check.checked {
+  background-color: var(--accent-green);
+  border-color: var(--accent-green);
+}
+
+/* Fade-out animation for completed reminders */
+@keyframes fadeOut {
+  0% { opacity: 1; transform: scale(1); }
+  60% { opacity: 0.5; transform: scale(0.97); }
+  100% { opacity: 0; transform: scale(0.95); }
+}
+
+.reminder-fade-out {
+  animation: fadeOut 0.5s ease forwards;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+/* Input reset */
+input, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-placeholder);
+}

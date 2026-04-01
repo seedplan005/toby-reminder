@@ -16,16 +16,16 @@
 - [x] API 동작 테스트 (ReminderControllerTest 통합 테스트로 대체 — 실제 H2 DB에 데이터 저장/조회 검증)
 
 ### Frontend
-- [ ] Next.js 프로젝트 초기화 (`frontend/`, App Router, TypeScript)
-- [ ] API 프록시 설정 (`next.config.ts` rewrites → `localhost:8080`)
-- [ ] API 클라이언트 유틸 생성 (`lib/api.ts`)
-- [ ] 리마인더 목록 페이지 구현 (`app/page.tsx`)
-  - [ ] 리마인더 목록 표시
-  - [ ] 완료 체크 토글 (원형 체크박스)
-  - [ ] 하단 인라인 입력으로 리마인더 추가
-  - [ ] 삭제 버튼
-- [ ] 기본 Apple 스타일 CSS 적용 (시스템 폰트, 흰색 배경, 완료 원 스타일)
-- [ ] Phase 1 통합 테스트 (Backend + Frontend 연동 확인)
+- [x] Next.js 프로젝트 초기화 (`frontend/`, App Router, TypeScript)
+- [x] API 프록시 설정 (`next.config.ts` rewrites → `localhost:8080`)
+- [x] API 클라이언트 유틸 생성 (`lib/api.ts`)
+- [x] 리마인더 목록 페이지 구현 (`app/page.tsx`)
+  - [x] 리마인더 목록 표시
+  - [x] 완료 체크 토글 (원형 체크박스)
+  - [x] 하단 인라인 입력으로 리마인더 추가
+  - [x] 삭제 버튼
+- [x] 기본 Apple 스타일 CSS 적용 (시스템 폰트, 흰색 배경, 완료 원 스타일)
+- [x] Phase 1 통합 테스트 (Backend + Frontend 연동 확인)
 
 ---
 
