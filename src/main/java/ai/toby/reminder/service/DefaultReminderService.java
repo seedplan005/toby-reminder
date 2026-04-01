@@ -1,5 +1,6 @@
 package ai.toby.reminder.service;
 
+import ai.toby.reminder.domain.Priority;
 import ai.toby.reminder.domain.Reminder;
 import ai.toby.reminder.domain.ReminderList;
 import ai.toby.reminder.domain.ReminderListRepository;
@@ -9,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -34,6 +37,29 @@ public class DefaultReminderService implements ReminderService {
     }
 
     @Override
+    public List<Reminder> findAllByFilter(ReminderFilter filter) {
+        if (filter.listId() != null) {
+            return findAllByListId(filter.listId());
+        }
+        if (Boolean.TRUE.equals(filter.completed())) {
+            return reminderRepository.findAllCompletedWithList();
+        }
+        if (Boolean.TRUE.equals(filter.flagged())) {
+            return reminderRepository.findAllFlaggedIncompleteWithList();
+        }
+        if (filter.dueDate() != null) {
+            return reminderRepository.findAllDueTodayWithList(filter.dueDate());
+        }
+        if (filter.dueBefore() != null) {
+            return reminderRepository.findAllScheduledFromWithList(LocalDate.now().plusDays(1));
+        }
+        if (Boolean.FALSE.equals(filter.completed())) {
+            return reminderRepository.findAllIncompleteWithList();
+        }
+        return reminderRepository.findAllWithList();
+    }
+
+    @Override
     public Reminder findById(Long id) {
         return reminderRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Reminder not found: " + id));
@@ -55,9 +81,9 @@ public class DefaultReminderService implements ReminderService {
 
     @Override
     @Transactional
-    public Reminder update(Long id, String title) {
+    public Reminder update(Long id, String title, String notes, LocalDate dueDate, LocalTime dueTime, Priority priority) {
         Reminder reminder = findById(id);
-        reminder.update(title);
+        reminder.update(title, notes, dueDate, dueTime, priority);
         return reminder;
     }
 
@@ -74,5 +100,34 @@ public class DefaultReminderService implements ReminderService {
         Reminder reminder = findById(id);
         reminder.toggleComplete();
         return reminder;
+    }
+
+    @Override
+    @Transactional
+    public Reminder toggleFlag(Long id) {
+        Reminder reminder = findById(id);
+        reminder.toggleFlag();
+        return reminder;
+    }
+
+    @Override
+    public ReminderCounts getCounts() {
+        LocalDate today = LocalDate.now();
+        LocalDate tomorrow = today.plusDays(1);
+        return new ReminderCounts(
+                reminderRepository.countTodayIncomplete(today),
+                reminderRepository.countScheduledFrom(tomorrow),
+                reminderRepository.countAllIncomplete(),
+                reminderRepository.countFlaggedIncomplete(),
+                reminderRepository.countCompleted()
+        );
+    }
+
+    @Override
+    @Transactional
+    public void reorder(List<Long> orderedIds) {
+        for (int i = 0; i < orderedIds.size(); i++) {
+            reminderRepository.updateDisplayOrder(orderedIds.get(i), i);
+        }
     }
 }

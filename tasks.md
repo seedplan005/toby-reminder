@@ -58,27 +58,27 @@
 ## Phase 3 - 리마인더 상세 속성 + 상세 패널
 
 ### Backend
-- [ ] `Reminder` Entity에 필드 추가 (notes, dueDate, dueTime, priority, flagged, completedAt)
-- [ ] `Priority` Enum 생성 (NONE, LOW, MEDIUM, HIGH)
-- [ ] `PATCH /api/reminders/{id}/flag` - 깃발 토글 API
-- [ ] `GET /api/reminders` 쿼리 파라미터 확장 (completed, flagged, dueDate, dueBefore, priority)
+- [x] `Reminder` Entity에 필드 추가 (notes, dueDate, dueTime, priority, flagged, completedAt)
+- [x] `Priority` Enum 생성 (NONE, LOW, MEDIUM, HIGH)
+- [x] `PATCH /api/reminders/{id}/flag` - 깃발 토글 API
+- [x] `GET /api/reminders` 쿼리 파라미터 확장 (completed, flagged, dueDate, dueBefore, priority)
 
 ### Frontend
-- [ ] 리마인더 상세 패널 컴포넌트 (메인 영역 하단 인라인)
-  - [ ] 제목 입력 (볼드)
-  - [ ] 메모 textarea
-  - [ ] 날짜 피커
-  - [ ] 시간 피커
-  - [ ] 우선순위 세그먼트 컨트롤 (없음/낮음/중간/높음)
-  - [ ] 깃발 토글
-  - [ ] 리스트 변경 드롭다운
-- [ ] 리마인더 행 디자인 강화
-  - [ ] 메모 미리보기 (한 줄, 회색)
-  - [ ] 마감일 표시 (지난 날짜 빨간색)
-  - [ ] 깃발 아이콘 표시
-  - [ ] 우선순위 느낌표 (완료 원 안)
-- [ ] 완료 애니메이션 (원 체크 → 채움 → 0.5초 후 페이드아웃)
-- [ ] Phase 3 통합 테스트
+- [x] 리마인더 상세 패널 컴포넌트 (메인 영역 하단 인라인)
+  - [x] 제목 입력 (볼드)
+  - [x] 메모 textarea
+  - [x] 날짜 피커
+  - [x] 시간 피커
+  - [x] 우선순위 세그먼트 컨트롤 (없음/낮음/중간/높음)
+  - [x] 깃발 토글
+  - [x] 리스트 변경 드롭다운
+- [x] 리마인더 행 디자인 강화
+  - [x] 메모 미리보기 (한 줄, 회색)
+  - [x] 마감일 표시 (지난 날짜 빨간색)
+  - [x] 깃발 아이콘 표시
+  - [x] 우선순위 느낌표 (완료 원 안)
+- [x] 완료 애니메이션 (원 체크 → 채움 → 0.5초 후 페이드아웃)
+- [x] Phase 3 통합 테스트
 
 ---
 

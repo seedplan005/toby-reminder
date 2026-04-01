@@ -56,6 +56,14 @@ public class DefaultReminderListService implements ReminderListService {
     }
 
     @Override
+    @Transactional
+    public void reorder(List<Long> orderedIds) {
+        for (int i = 0; i < orderedIds.size(); i++) {
+            reminderListRepository.updateDisplayOrder(orderedIds.get(i), i);
+        }
+    }
+
+    @Override
     public Map<Long, Long> getIncompleteCountMap() {
         List<Object[]> rows = reminderRepository.countIncompleteGroupByListId();
         Map<Long, Long> result = new HashMap<>();

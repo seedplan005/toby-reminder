@@ -16,9 +16,25 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 // Reminders
-export const getReminders = (listId?: number | null): Promise<Reminder[]> => {
-  const query = listId != null ? `?listId=${listId}` : "";
-  return request(`/reminders${query}`);
+export const getReminders = (
+  params?: {
+    listId?: number | null;
+    completed?: boolean;
+    flagged?: boolean;
+    dueDate?: string;
+    dueBefore?: string;
+    priority?: string;
+  }
+): Promise<Reminder[]> => {
+  const q = new URLSearchParams();
+  if (params?.listId != null) q.set("listId", String(params.listId));
+  if (params?.completed != null) q.set("completed", String(params.completed));
+  if (params?.flagged != null) q.set("flagged", String(params.flagged));
+  if (params?.dueDate) q.set("dueDate", params.dueDate);
+  if (params?.dueBefore) q.set("dueBefore", params.dueBefore);
+  if (params?.priority) q.set("priority", params.priority);
+  const qs = q.toString();
+  return request(`/reminders${qs ? "?" + qs : ""}`);
 };
 
 export const createReminder = (

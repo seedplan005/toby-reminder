@@ -1,6 +1,7 @@
 package ai.toby.reminder.controller;
 
 import ai.toby.reminder.controller.request.CreateReminderListRequest;
+import ai.toby.reminder.controller.request.ReorderRequest;
 import ai.toby.reminder.controller.request.UpdateReminderListRequest;
 import ai.toby.reminder.controller.response.ReminderListResponse;
 import ai.toby.reminder.service.port.input.ReminderListService;
@@ -9,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -54,5 +56,11 @@ public class ReminderListController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         reminderListService.delete(id);
+    }
+
+    @PatchMapping("/reorder")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void reorder(@RequestBody @Valid ReorderRequest request) {
+        reminderListService.reorder(request.orderedIds());
     }
 }

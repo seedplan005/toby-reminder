@@ -3,6 +3,9 @@ package ai.toby.reminder.domain;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class ReminderTest {
@@ -34,7 +37,7 @@ class ReminderTest {
 
         Thread.sleep(10);
 
-        reminder.update("운동하기");
+        reminder.update("운동하기", null, null, null, null);
 
         assertThat(reminder.getTitle()).isEqualTo("운동하기");
         assertThat(reminder.getUpdatedAt()).isAfter(originalUpdatedAt);
@@ -51,6 +54,59 @@ class ReminderTest {
 
         reminder.toggleComplete();
         assertThat(reminder.isCompleted()).isFalse();
+    }
+
+    @Test
+    @DisplayName("toggleComplete하면 completedAt이 설정/해제된다")
+    void toggleCompleteSetsCompletedAt() {
+        Reminder reminder = new Reminder("장보기");
+        assertThat(reminder.getCompletedAt()).isNull();
+
+        reminder.toggleComplete();
+        assertThat(reminder.getCompletedAt()).isNotNull();
+
+        reminder.toggleComplete();
+        assertThat(reminder.getCompletedAt()).isNull();
+    }
+
+    @Test
+    @DisplayName("toggleFlag하면 flagged 상태가 반전된다")
+    void toggleFlag() throws Exception {
+        Reminder reminder = new Reminder("장보기");
+        assertThat(reminder.isFlagged()).isFalse();
+        var originalUpdatedAt = reminder.getUpdatedAt();
+
+        Thread.sleep(10);
+        reminder.toggleFlag();
+
+        assertThat(reminder.isFlagged()).isTrue();
+        assertThat(reminder.getUpdatedAt()).isAfter(originalUpdatedAt);
+
+        reminder.toggleFlag();
+        assertThat(reminder.isFlagged()).isFalse();
+    }
+
+    @Test
+    @DisplayName("update에 notes, dueDate, dueTime, priority를 설정할 수 있다")
+    void updateWithDetailFields() throws Exception {
+        Reminder reminder = new Reminder("장보기");
+        Thread.sleep(10);
+
+        reminder.update("장보기 업데이트", "메모 내용", LocalDate.of(2026, 5, 1),
+                LocalTime.of(9, 0), Priority.HIGH);
+
+        assertThat(reminder.getNotes()).isEqualTo("메모 내용");
+        assertThat(reminder.getDueDate()).isEqualTo(LocalDate.of(2026, 5, 1));
+        assertThat(reminder.getDueTime()).isEqualTo(LocalTime.of(9, 0));
+        assertThat(reminder.getPriority()).isEqualTo(Priority.HIGH);
+    }
+
+    @Test
+    @DisplayName("생성 시 priority는 NONE으로 초기화된다")
+    void defaultPriorityIsNone() {
+        Reminder reminder = new Reminder("장보기");
+        assertThat(reminder.getPriority()).isEqualTo(Priority.NONE);
+        assertThat(reminder.isFlagged()).isFalse();
     }
 
     @Test

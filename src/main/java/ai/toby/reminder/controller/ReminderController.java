@@ -1,8 +1,12 @@
 package ai.toby.reminder.controller;
 
 import ai.toby.reminder.controller.request.CreateReminderRequest;
+import ai.toby.reminder.controller.request.ReorderRequest;
 import ai.toby.reminder.controller.request.UpdateReminderRequest;
+import ai.toby.reminder.controller.response.ReminderCountsResponse;
 import ai.toby.reminder.controller.response.ReminderResponse;
+import ai.toby.reminder.domain.Priority;
+import ai.toby.reminder.service.ReminderFilter;
 import ai.toby.reminder.service.port.input.ReminderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,11 +19,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import org.springframework.web.bind.annotation.RequestParam;
-
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -30,13 +34,23 @@ public class ReminderController {
     private final ReminderService reminderService;
 
     @GetMapping
-    public List<ReminderResponse> findAll(@RequestParam(required = false) Long listId) {
-        List<ai.toby.reminder.domain.Reminder> reminders = (listId != null)
-                ? reminderService.findAllByListId(listId)
-                : reminderService.findAll();
-        return reminders.stream()
+    public List<ReminderResponse> findAll(
+            @RequestParam(required = false) Long listId,
+            @RequestParam(required = false) Boolean completed,
+            @RequestParam(required = false) Boolean flagged,
+            @RequestParam(required = false) LocalDate dueDate,
+            @RequestParam(required = false) LocalDate dueBefore,
+            @RequestParam(required = false) Priority priority
+    ) {
+        ReminderFilter filter = new ReminderFilter(listId, completed, flagged, dueDate, dueBefore, priority);
+        return reminderService.findAllByFilter(filter).stream()
                 .map(ReminderResponse::from)
                 .toList();
+    }
+
+    @GetMapping("/counts")
+    public ReminderCountsResponse getCounts() {
+        return ReminderCountsResponse.from(reminderService.getCounts());
     }
 
     @GetMapping("/{id}")
@@ -56,7 +70,14 @@ public class ReminderController {
     @PutMapping("/{id}")
     public ReminderResponse update(@PathVariable Long id,
                                    @RequestBody @Valid UpdateReminderRequest request) {
-        return ReminderResponse.from(reminderService.update(id, request.title()));
+        return ReminderResponse.from(reminderService.update(
+                id,
+                request.title(),
+                request.notes(),
+                request.dueDate(),
+                request.dueTime(),
+                request.priority()
+        ));
     }
 
     @DeleteMapping("/{id}")
@@ -68,5 +89,16 @@ public class ReminderController {
     @PatchMapping("/{id}/complete")
     public ReminderResponse toggleComplete(@PathVariable Long id) {
         return ReminderResponse.from(reminderService.toggleComplete(id));
+    }
+
+    @PatchMapping("/{id}/flag")
+    public ReminderResponse toggleFlag(@PathVariable Long id) {
+        return ReminderResponse.from(reminderService.toggleFlag(id));
+    }
+
+    @PatchMapping("/reorder")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void reorder(@RequestBody @Valid ReorderRequest request) {
+        reminderService.reorder(request.orderedIds());
     }
 }

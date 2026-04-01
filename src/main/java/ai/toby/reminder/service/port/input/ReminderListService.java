@@ -18,4 +18,6 @@ public interface ReminderListService {
     void delete(Long id);
 
     Map<Long, Long> getIncompleteCountMap();
+
+    void reorder(java.util.List<Long> orderedIds);
 }

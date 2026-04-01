@@ -184,4 +184,56 @@ class ReminderControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.listId").value(list.getId()));
     }
+
+    @Test
+    @DisplayName("PATCH /api/reminders/{id}/flag - flagged 상태를 토글한다")
+    void toggleFlag() throws Exception {
+        String response = mockMvc.perform(post("/api/reminders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("title", "장보기"))))
+                .andReturn().getResponse().getContentAsString();
+        Long id = objectMapper.readTree(response).get("id").asLong();
+
+        mockMvc.perform(patch("/api/reminders/{id}/flag", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.flagged").value(true));
+    }
+
+    @Test
+    @DisplayName("GET /api/reminders/counts - 스마트 리스트 건수를 반환한다")
+    void getCounts() throws Exception {
+        mockMvc.perform(post("/api/reminders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("title", "항목1"))))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/reminders/counts"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.all").value(1))
+                .andExpect(jsonPath("$.completed").value(0))
+                .andExpect(jsonPath("$.flagged").value(0));
+    }
+
+    @Test
+    @DisplayName("PUT /api/reminders/{id} - notes, dueDate, priority를 수정한다")
+    void updateWithDetailFields() throws Exception {
+        String response = mockMvc.perform(post("/api/reminders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("title", "장보기"))))
+                .andReturn().getResponse().getContentAsString();
+        Long id = objectMapper.readTree(response).get("id").asLong();
+
+        mockMvc.perform(put("/api/reminders/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "title", "장보기",
+                                "notes", "메모 내용",
+                                "dueDate", "2026-05-01",
+                                "priority", "HIGH"
+                        ))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.notes").value("메모 내용"))
+                .andExpect(jsonPath("$.dueDate").value("2026-05-01"))
+                .andExpect(jsonPath("$.priority").value("HIGH"));
+    }
 }

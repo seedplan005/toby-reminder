@@ -1,18 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import type { Reminder, ReminderList } from "@/types";
-import {
-  getReminders,
-  createReminder,
-  deleteReminder,
-  toggleComplete,
-  updateReminder,
-} from "@/lib/api";
+import type { Reminder } from "@/types";
+import { getReminders, createReminder, deleteReminder, toggleComplete } from "@/lib/api";
 import { useApp } from "@/context/AppContext";
+import ReminderDetail from "./ReminderDetail";
 
 interface Props {
   listId?: number | null;
+  filterParams?: Parameters<typeof getReminders>[0];
   listColor?: string;
   title: string;
   onReminderCountChange?: () => void;
@@ -20,10 +16,12 @@ interface Props {
 
 export default function ReminderListView({
   listId,
+  filterParams,
   listColor,
   title,
   onReminderCountChange,
 }: Props) {
+  const { lists } = useApp();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [newTitle, setNewTitle] = useState("");
   const [fadingIds, setFadingIds] = useState<Set<number>>(new Set());
@@ -32,12 +30,17 @@ export default function ReminderListView({
 
   const load = useCallback(async () => {
     try {
-      const data = await getReminders(listId);
-      setReminders(data.filter((r) => !r.completed));
+      const params = listId != null
+        ? { ...filterParams, listId }
+        : filterParams;
+      const data = await getReminders(params);
+      // For completed smart list, show all; otherwise hide completed
+      const showCompleted = filterParams?.completed === true;
+      setReminders(showCompleted ? data : data.filter((r) => !r.completed));
     } catch (e) {
       console.error(e);
     }
-  }, [listId]);
+  }, [listId, JSON.stringify(filterParams)]);
 
   useEffect(() => {
     load();
@@ -72,6 +75,7 @@ export default function ReminderListView({
         return next;
       });
       setReminders((prev) => prev.filter((r) => r.id !== id));
+      if (selectedId === id) setSelectedId(null);
       onReminderCountChange?.();
     }, 500);
 
@@ -95,51 +99,50 @@ export default function ReminderListView({
     }
   };
 
+  const handleReminderUpdate = (updated: Reminder) => {
+    setReminders((prev) =>
+      prev.map((r) => (r.id === updated.id ? updated : r))
+    );
+  };
+
   const checkColor = listColor ?? "var(--accent-green)";
+  const visible = reminders.filter((r) => !r.completed || fadingIds.has(r.id));
+  const selectedReminder = selectedId != null
+    ? reminders.find((r) => r.id === selectedId) ?? null
+    : null;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      {/* Header */}
-      <div
-        style={{
-          padding: "32px 24px 16px",
-          flexShrink: 0,
-        }}
-      >
-        <h1
-          style={{
-            fontSize: 28,
-            fontWeight: 700,
-            color: listColor ?? "var(--text-primary)",
-            margin: 0,
-          }}
-        >
-          {title}
-        </h1>
-        <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>
-          {reminders.filter((r) => !r.completed).length}개 남음
-        </p>
-      </div>
+    <div style={{ display: "flex", height: "100%", overflow: "hidden" }}>
+      {/* Main list */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        {/* Header */}
+        <div style={{ padding: "32px 24px 16px", flexShrink: 0 }}>
+          <h1
+            style={{
+              fontSize: 28,
+              fontWeight: 700,
+              color: listColor ?? "var(--text-primary)",
+              margin: 0,
+            }}
+          >
+            {title}
+          </h1>
+          <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>
+            {visible.filter((r) => !r.completed).length}개 남음
+          </p>
+        </div>
 
-      {/* List */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          padding: "0 24px 24px",
-        }}
-      >
-        <div
-          style={{
-            background: "var(--surface)",
-            borderRadius: 12,
-            overflow: "hidden",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-          }}
-        >
-          {reminders
-            .filter((r) => !r.completed || fadingIds.has(r.id))
-            .map((reminder, idx, arr) => (
+        {/* List */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "0 24px 24px" }}>
+          <div
+            style={{
+              background: "var(--surface)",
+              borderRadius: 12,
+              overflow: "hidden",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+            }}
+          >
+            {visible.map((reminder, idx, arr) => (
               <ReminderRow
                 key={reminder.id}
                 reminder={reminder}
@@ -155,65 +158,59 @@ export default function ReminderListView({
               />
             ))}
 
-          {/* Inline add */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              padding: "12px 16px",
-              borderTop:
-                reminders.length > 0 ? "1px solid var(--border)" : undefined,
-            }}
-          >
-            <button
-              onClick={() => inputRef.current?.focus()}
+            {/* Inline add */}
+            <div
               style={{
-                width: 22,
-                height: 22,
-                borderRadius: "50%",
-                border: `2px solid var(--accent-blue)`,
-                background: "transparent",
-                cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                padding: 0,
-                flexShrink: 0,
+                gap: 12,
+                padding: "12px 16px",
+                borderTop: visible.length > 0 ? "1px solid var(--border)" : undefined,
               }}
-              aria-label="새 리마인더 추가"
             >
-              <span
+              <button
+                onClick={() => inputRef.current?.focus()}
                 style={{
-                  color: "var(--accent-blue)",
-                  fontSize: 16,
-                  lineHeight: 1,
-                  marginTop: -1,
+                  width: 22,
+                  height: 22,
+                  borderRadius: "50%",
+                  border: `2px solid var(--accent-blue)`,
+                  background: "transparent",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 0,
+                  flexShrink: 0,
                 }}
+                aria-label="새 리마인더 추가"
               >
-                +
-              </span>
-            </button>
-            <input
-              ref={inputRef}
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleAdd();
-              }}
-              placeholder="새로운 리마인더"
-              style={{
-                flex: 1,
-                fontSize: 16,
-                color: "var(--text-primary)",
-                background: "transparent",
-                border: "none",
-                outline: "none",
-              }}
-            />
+                <span style={{ color: "var(--accent-blue)", fontSize: 16, lineHeight: 1, marginTop: -1 }}>
+                  +
+                </span>
+              </button>
+              <input
+                ref={inputRef}
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
+                placeholder="새로운 리마인더"
+                style={{ flex: 1, fontSize: 16 }}
+              />
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Detail panel */}
+      {selectedReminder && (
+        <ReminderDetail
+          reminder={selectedReminder}
+          lists={lists}
+          onUpdate={handleReminderUpdate}
+          onClose={() => setSelectedId(null)}
+        />
+      )}
     </div>
   );
 }
@@ -238,6 +235,17 @@ function ReminderRow({
   onSelect: (id: number) => void;
 }) {
   const [hovered, setHovered] = useState(false);
+  const today = new Date().toISOString().slice(0, 10);
+  const isPastDue = reminder.dueDate && reminder.dueDate < today;
+
+  const priorityMark =
+    reminder.priority === "HIGH"
+      ? "!!!"
+      : reminder.priority === "MEDIUM"
+      ? "!!"
+      : reminder.priority === "LOW"
+      ? "!"
+      : null;
 
   return (
     <div
@@ -246,55 +254,97 @@ function ReminderRow({
       onMouseLeave={() => setHovered(false)}
       style={{
         display: "flex",
-        alignItems: "center",
+        alignItems: "flex-start",
         gap: 12,
         padding: "12px 16px",
         borderBottom: showDivider ? "1px solid var(--border)" : undefined,
-        background: hovered ? "var(--surface-hover)" : "var(--surface)",
+        background: selected
+          ? "rgba(0,122,255,0.06)"
+          : hovered
+          ? "var(--surface-hover)"
+          : "var(--surface)",
         transition: "background 0.1s ease",
         cursor: "pointer",
       }}
       onClick={() => onSelect(reminder.id)}
     >
+      {/* Check circle */}
       <button
         onClick={(e) => {
           e.stopPropagation();
           onToggle(reminder.id);
         }}
         className={`reminder-check${reminder.completed ? " checked" : ""}`}
-        style={
-          !reminder.completed
-            ? { borderColor: checkColor }
-            : { backgroundColor: checkColor, borderColor: checkColor }
-        }
+        style={{
+          marginTop: 1,
+          ...(reminder.completed
+            ? { backgroundColor: checkColor, borderColor: checkColor }
+            : { borderColor: checkColor }),
+        }}
         aria-label={reminder.completed ? "완료 취소" : "완료"}
       >
         {reminder.completed && (
           <svg width="12" height="9" viewBox="0 0 12 9" fill="none">
-            <path
-              d="M1 4L4.5 7.5L11 1"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <path d="M1 4L4.5 7.5L11 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
+        )}
+        {!reminder.completed && priorityMark && (
+          <span style={{ fontSize: 8, color: checkColor, fontWeight: 700, lineHeight: 1 }}>
+            {priorityMark}
+          </span>
         )}
       </button>
 
-      <span
-        style={{
-          flex: 1,
-          fontSize: 16,
-          color: reminder.completed
-            ? "var(--text-secondary)"
-            : "var(--text-primary)",
-          textDecoration: reminder.completed ? "line-through" : "none",
-        }}
-      >
-        {reminder.title}
-      </span>
+      {/* Content */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span
+            style={{
+              fontSize: 16,
+              color: reminder.completed ? "var(--text-secondary)" : "var(--text-primary)",
+              textDecoration: reminder.completed ? "line-through" : "none",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {reminder.title}
+          </span>
+          {reminder.flagged && (
+            <span style={{ fontSize: 12 }}>🚩</span>
+          )}
+        </div>
+        {/* Notes preview */}
+        {reminder.notes && (
+          <div
+            style={{
+              fontSize: 13,
+              color: "var(--text-secondary)",
+              marginTop: 2,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {reminder.notes}
+          </div>
+        )}
+        {/* Due date */}
+        {reminder.dueDate && (
+          <div
+            style={{
+              fontSize: 12,
+              color: isPastDue ? "var(--accent-red)" : "var(--text-secondary)",
+              marginTop: 2,
+            }}
+          >
+            {reminder.dueDate}
+            {reminder.dueTime && ` ${reminder.dueTime}`}
+          </div>
+        )}
+      </div>
 
+      {/* Delete button */}
       {hovered && (
         <button
           onClick={(e) => {
