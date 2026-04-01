@@ -1,5 +1,6 @@
 package ai.toby.reminder.domain;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -7,7 +8,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ReminderTest {
 
     @Test
-    void 생성자로_리마인더를_만들면_title이_설정되고_completed는_false이다() {
+    @DisplayName("생성자로 리마인더를 만들면 title이 설정되고 completed는 false이다")
+    void createWithTitle() {
         Reminder reminder = new Reminder("장보기");
 
         assertThat(reminder.getTitle()).isEqualTo("장보기");
@@ -15,7 +17,8 @@ class ReminderTest {
     }
 
     @Test
-    void 생성하면_createdAt과_updatedAt이_설정된다() {
+    @DisplayName("생성하면 createdAt과 updatedAt이 설정된다")
+    void createSetsTimestamps() {
         Reminder reminder = new Reminder("장보기");
 
         assertThat(reminder.getCreatedAt()).isNotNull();
@@ -24,7 +27,8 @@ class ReminderTest {
     }
 
     @Test
-    void update하면_title이_변경되고_updatedAt이_갱신된다() throws Exception {
+    @DisplayName("update하면 title이 변경되고 updatedAt이 갱신된다")
+    void updateChangesTitle() throws Exception {
         Reminder reminder = new Reminder("장보기");
         var originalUpdatedAt = reminder.getUpdatedAt();
 
@@ -37,7 +41,8 @@ class ReminderTest {
     }
 
     @Test
-    void toggleComplete하면_completed_상태가_반전된다() {
+    @DisplayName("toggleComplete하면 completed 상태가 반전된다")
+    void toggleComplete() {
         Reminder reminder = new Reminder("장보기");
         assertThat(reminder.isCompleted()).isFalse();
 
