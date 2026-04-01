@@ -2,9 +2,26 @@
 
 import { useState, useEffect } from "react";
 import { useApp } from "@/context/AppContext";
-import { deleteList, getReminderCounts } from "@/lib/api";
+import { deleteList, getReminderCounts, reorderLists } from "@/lib/api";
 import CreateListModal from "./CreateListModal";
 import type { ReminderCounts, ReminderList } from "@/types";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const SMART_ITEMS: Array<{
   filter: "today" | "scheduled" | "all" | "flagged" | "completed";
@@ -31,6 +48,11 @@ export default function Sidebar() {
   const [counts, setCounts] = useState<ReminderCounts | null>(null);
   const [search, setSearch] = useState("");
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
   useEffect(() => {
     getReminderCounts().then(setCounts).catch(console.error);
   }, []);
@@ -56,6 +78,22 @@ export default function Sidebar() {
   const filteredLists = search.trim()
     ? lists.filter((l) => l.name.toLowerCase().includes(search.toLowerCase()))
     : lists;
+
+  const handleListDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = lists.findIndex((l) => l.id === Number(active.id));
+    const newIndex = lists.findIndex((l) => l.id === Number(over.id));
+    const reordered = arrayMove(lists, oldIndex, newIndex);
+    // Optimistic update via refreshLists after API call
+    try {
+      await reorderLists(reordered.map((l) => l.id));
+      await refreshLists();
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   return (
     <>
@@ -150,46 +188,19 @@ export default function Sidebar() {
             </span>
           </div>
 
-          {filteredLists.map((list) => {
-            const isSelected = selection?.type === "list" && selection.id === list.id;
-            return (
-              <div
-                key={list.id}
-                onClick={() => setSelection({ type: "list", id: list.id })}
-                onContextMenu={(e) => handleContextMenu(e, list.id)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "8px 16px",
-                  cursor: "pointer",
-                  borderRadius: 8,
-                  margin: "0 4px",
-                  background: isSelected ? "var(--accent-blue)" : "transparent",
-                  color: isSelected ? "white" : "var(--text-primary)",
-                  transition: "background 0.1s ease",
-                }}
-              >
-                <div
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    background: list.color,
-                    flexShrink: 0,
-                  }}
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleListDragEnd}>
+            <SortableContext items={filteredLists.map((l) => l.id)} strategy={verticalListSortingStrategy}>
+              {filteredLists.map((list) => (
+                <SortableListItem
+                  key={list.id}
+                  list={list}
+                  isSelected={selection?.type === "list" && selection.id === list.id}
+                  onSelect={() => setSelection({ type: "list", id: list.id })}
+                  onContextMenu={(e) => handleContextMenu(e, list.id)}
                 />
-                <span style={{ flex: 1, fontSize: 15, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {list.name}
-                </span>
-                {list.reminderCount > 0 && (
-                  <span style={{ fontSize: 13, color: isSelected ? "rgba(255,255,255,0.8)" : "var(--text-secondary)" }}>
-                    {list.reminderCount}
-                  </span>
-                )}
-              </div>
-            );
-          })}
+              ))}
+            </SortableContext>
+          </DndContext>
 
           {filteredLists.length === 0 && search && (
             <div style={{ padding: "8px 16px", fontSize: 14, color: "var(--text-secondary)" }}>
@@ -259,6 +270,66 @@ export default function Sidebar() {
         />
       )}
     </>
+  );
+}
+
+function SortableListItem({
+  list,
+  isSelected,
+  onSelect,
+  onContextMenu,
+}: {
+  list: ReminderList;
+  isSelected: boolean;
+  onSelect: () => void;
+  onContextMenu: (e: React.MouseEvent) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: list.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      onClick={onSelect}
+      onContextMenu={onContextMenu}
+      style={{
+        ...style,
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        padding: "8px 16px",
+        cursor: isDragging ? "grabbing" : "pointer",
+        borderRadius: 8,
+        margin: "0 4px",
+        background: isSelected ? "var(--accent-blue)" : "transparent",
+        color: isSelected ? "white" : "var(--text-primary)",
+        transition: isDragging ? undefined : "background 0.1s ease",
+      }}
+    >
+      <div
+        style={{
+          width: 10,
+          height: 10,
+          borderRadius: "50%",
+          background: list.color,
+          flexShrink: 0,
+        }}
+      />
+      <span style={{ flex: 1, fontSize: 15, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {list.name}
+      </span>
+      {list.reminderCount > 0 && (
+        <span style={{ fontSize: 13, color: isSelected ? "rgba(255,255,255,0.8)" : "var(--text-secondary)" }}>
+          {list.reminderCount}
+        </span>
+      )}
+    </div>
   );
 }
 

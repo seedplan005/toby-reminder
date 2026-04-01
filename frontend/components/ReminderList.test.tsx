@@ -7,6 +7,7 @@ jest.mock("@/lib/api", () => ({
   createReminder: jest.fn(),
   toggleComplete: jest.fn(),
   deleteReminder: jest.fn(),
+  reorderReminders: jest.fn(),
 }));
 
 jest.mock("@/context/AppContext", () => ({
@@ -67,7 +68,7 @@ describe("ReminderListView", () => {
     render(<ReminderListView title="업무" listId={1} />);
     await waitFor(() => screen.getByText("업무 처리"));
 
-    const input = screen.getByPlaceholderText("새로운 리마인더");
+    const input = screen.getByPlaceholderText("새로운 리마인더 (N)");
     fireEvent.change(input, { target: { value: "새 항목" } });
     fireEvent.keyDown(input, { key: "Enter" });
 

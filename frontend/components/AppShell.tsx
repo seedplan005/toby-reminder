@@ -5,7 +5,7 @@ import { useApp } from "@/context/AppContext";
 import Sidebar from "./Sidebar";
 
 export default function AppShell({ children }: { children: ReactNode }) {
-  const { sidebarOpen } = useApp();
+  const { sidebarOpen, setSidebarOpen } = useApp();
 
   return (
     <div
@@ -36,8 +36,30 @@ export default function AppShell({ children }: { children: ReactNode }) {
           display: "flex",
           flexDirection: "column",
           background: "var(--bg)",
+          position: "relative",
         }}
       >
+        {/* Sidebar toggle button */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          style={{
+            position: "absolute",
+            top: 12,
+            left: 12,
+            zIndex: 10,
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            color: "var(--text-secondary)",
+            fontSize: 18,
+            padding: 4,
+            borderRadius: 6,
+            lineHeight: 1,
+          }}
+          aria-label={sidebarOpen ? "사이드바 닫기" : "사이드바 열기"}
+        >
+          ☰
+        </button>
         {children}
       </main>
     </div>
