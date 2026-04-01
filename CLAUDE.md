@@ -24,6 +24,20 @@ ai.toby.reminder
 - `@PrePersist`/`@PreUpdate` 사용 금지 — 생성자와 비즈니스 메서드에서 `createdAt`/`updatedAt` 직접 관리
 - Setter 사용 금지 — 의미 있는 비즈니스 메서드로 상태 변경
 
+### Spring Boot 4.0 패키지 변경
+Spring Boot 4.0은 일부 패키지가 변경되었다. 기존 import를 그대로 쓰면 컴파일 에러.
+| 기능 | 기존 (3.x) | 변경 (4.0) |
+|------|-----------|-----------|
+| `@DataJpaTest` | `org.springframework.boot.test.autoconfigure.orm.jpa` | `org.springframework.boot.data.jpa.test.autoconfigure` |
+| `@AutoConfigureMockMvc` | `org.springframework.boot.test.autoconfigure.web.servlet` | `org.springframework.boot.webmvc.test.autoconfigure` |
+| `ObjectMapper` | `com.fasterxml.jackson.databind` | `tools.jackson.databind` |
+
+## OpenAPI (openapi.yaml) 작성 규칙
+- `example` 값에 콜론(`:`)이 포함된 경우 반드시 따옴표로 감싼다.
+  - 잘못된 예: `example: Reminder not found: 999`
+  - 올바른 예: `example: "Reminder not found: 999"`
+- 콜론 외에도 `{`, `}`, `[`, `]`, `#`, `|`, `>` 등 YAML 예약 문자가 포함된 값은 따옴표로 감싼다.
+
 ## 테스트 관례
 - 기능 추가/수정 시 반드시 테스트를 함께 작성한다.
 - `@DisplayName`으로 한글 설명 작성, 메서드명은 영어 camelCase
