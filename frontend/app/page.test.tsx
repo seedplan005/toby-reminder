@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import HomePage from "./page";
 import type { ReminderList } from "@/types";
 
@@ -7,10 +7,17 @@ jest.mock("@/context/AppContext", () => ({
   useApp: jest.fn(),
 }));
 
-// Mock ReminderList component
+// Mock child components
 jest.mock("@/components/ReminderList", () => ({
   __esModule: true,
-  default: ({ title }: { title: string }) => <div data-testid="reminder-list">{title}</div>,
+  default: ({ title }: { title: string }) => (
+    <div data-testid="reminder-list">{title}</div>
+  ),
+}));
+
+jest.mock("@/components/HomeScreen", () => ({
+  __esModule: true,
+  default: () => <div data-testid="home-screen">홈 화면</div>,
 }));
 
 import { useApp } from "@/context/AppContext";
@@ -27,17 +34,17 @@ const mockList: ReminderList = {
 };
 
 describe("HomePage", () => {
-  it("선택된 리스트가 없으면 전체 리마인더를 표시한다", () => {
+  it("선택 없으면 홈 화면을 표시한다", () => {
     (useApp as jest.Mock).mockReturnValue({
       lists: [mockList],
       selection: null,
       refreshLists: jest.fn(),
     });
     render(<HomePage />);
-    expect(screen.getByText("전체 리마인더")).toBeInTheDocument();
+    expect(screen.getByTestId("home-screen")).toBeInTheDocument();
   });
 
-  it("리스트 선택 시 해당 리스트 이름을 헤더로 표시한다", () => {
+  it("리스트 선택 시 해당 리스트 이름을 표시한다", () => {
     (useApp as jest.Mock).mockReturnValue({
       lists: [mockList],
       selection: { type: "list", id: 1 },
@@ -45,5 +52,15 @@ describe("HomePage", () => {
     });
     render(<HomePage />);
     expect(screen.getByText("업무")).toBeInTheDocument();
+  });
+
+  it("스마트 리스트 선택 시 해당 이름을 표시한다", () => {
+    (useApp as jest.Mock).mockReturnValue({
+      lists: [mockList],
+      selection: { type: "smart", filter: "today" },
+      refreshLists: jest.fn(),
+    });
+    render(<HomePage />);
+    expect(screen.getByText("오늘")).toBeInTheDocument();
   });
 });

@@ -1,10 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useApp } from "@/context/AppContext";
-import { deleteList } from "@/lib/api";
+import { deleteList, getReminderCounts } from "@/lib/api";
 import CreateListModal from "./CreateListModal";
-import type { ReminderList } from "@/types";
+import type { ReminderCounts, ReminderList } from "@/types";
+
+const SMART_ITEMS: Array<{
+  filter: "today" | "scheduled" | "all" | "flagged" | "completed";
+  label: string;
+  icon: string;
+  color: string;
+}> = [
+  { filter: "today", label: "오늘", icon: "☀️", color: "#007AFF" },
+  { filter: "scheduled", label: "예정", icon: "📅", color: "#FF3B30" },
+  { filter: "all", label: "전체", icon: "📋", color: "#1C1C1E" },
+  { filter: "flagged", label: "깃발 표시됨", icon: "🚩", color: "#FF9500" },
+  { filter: "completed", label: "완료됨", icon: "✅", color: "#8E8E93" },
+];
 
 export default function Sidebar() {
   const { lists, refreshLists, selection, setSelection } = useApp();
@@ -15,12 +28,17 @@ export default function Sidebar() {
     x: number;
     y: number;
   } | null>(null);
+  const [counts, setCounts] = useState<ReminderCounts | null>(null);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    getReminderCounts().then(setCounts).catch(console.error);
+  }, []);
 
   const handleDeleteList = async (id: number) => {
     try {
       await deleteList(id);
       await refreshLists();
-      // Clear selection if deleted list was selected
       if (selection?.type === "list" && selection.id === id) {
         setSelection(null);
       }
@@ -30,20 +48,21 @@ export default function Sidebar() {
     setContextMenu(null);
   };
 
-  const handleContextMenu = (
-    e: React.MouseEvent,
-    listId: number
-  ) => {
+  const handleContextMenu = (e: React.MouseEvent, listId: number) => {
     e.preventDefault();
     setContextMenu({ listId, x: e.clientX, y: e.clientY });
   };
+
+  const filteredLists = search.trim()
+    ? lists.filter((l) => l.name.toLowerCase().includes(search.toLowerCase()))
+    : lists;
 
   return (
     <>
       <aside
         style={{
           width: 250,
-          flexShrink: 0,
+          height: "100%",
           background: "var(--surface)",
           borderRight: "1px solid var(--border)",
           display: "flex",
@@ -51,39 +70,88 @@ export default function Sidebar() {
           overflow: "hidden",
         }}
       >
-        <div
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            padding: "16px 0",
-          }}
-        >
-          {/* My Lists */}
+        {/* Search bar */}
+        <div style={{ padding: "12px 12px 8px" }}>
           <div
             style={{
-              padding: "0 12px",
-              marginBottom: 6,
+              background: "var(--bg)",
+              borderRadius: 8,
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
+              gap: 8,
+              padding: "6px 10px",
             }}
           >
-            <span
-              style={{
-                fontSize: 12,
-                fontWeight: 600,
-                color: "var(--text-secondary)",
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-              }}
-            >
+            <span style={{ color: "var(--text-secondary)", fontSize: 14 }}>🔍</span>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="검색"
+              style={{ flex: 1, fontSize: 14, background: "transparent" }}
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--text-secondary)", fontSize: 14 }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
+          {/* Smart lists */}
+          {!search && (
+            <>
+              <div style={{ padding: "0 12px 4px" }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  스마트 리스트
+                </span>
+              </div>
+              {SMART_ITEMS.map((item) => {
+                const count = counts?.[item.filter as keyof ReminderCounts] ?? 0;
+                const isSelected = selection?.type === "smart" && selection.filter === item.filter;
+                return (
+                  <div
+                    key={item.filter}
+                    onClick={() => setSelection({ type: "smart", filter: item.filter })}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "7px 16px",
+                      cursor: "pointer",
+                      borderRadius: 8,
+                      margin: "0 4px",
+                      background: isSelected ? "var(--accent-blue)" : "transparent",
+                      color: isSelected ? "white" : "var(--text-primary)",
+                    }}
+                  >
+                    <span style={{ fontSize: 15 }}>{item.icon}</span>
+                    <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{item.label}</span>
+                    {count > 0 && (
+                      <span style={{ fontSize: 13, color: isSelected ? "rgba(255,255,255,0.8)" : "var(--text-secondary)" }}>
+                        {count}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+
+              <div style={{ height: 1, background: "var(--border)", margin: "8px 12px" }} />
+            </>
+          )}
+
+          {/* My Lists */}
+          <div style={{ padding: "0 12px 4px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
               내 리스트
             </span>
           </div>
 
-          {lists.map((list) => {
-            const isSelected =
-              selection?.type === "list" && selection.id === list.id;
+          {filteredLists.map((list) => {
+            const isSelected = selection?.type === "list" && selection.id === list.id;
             return (
               <div
                 key={list.id}
@@ -111,55 +179,33 @@ export default function Sidebar() {
                     flexShrink: 0,
                   }}
                 />
-                <span
-                  style={{
-                    flex: 1,
-                    fontSize: 15,
-                    fontWeight: 500,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
+                <span style={{ flex: 1, fontSize: 15, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {list.name}
                 </span>
                 {list.reminderCount > 0 && (
-                  <span
-                    style={{
-                      fontSize: 13,
-                      color: isSelected ? "rgba(255,255,255,0.8)" : "var(--text-secondary)",
-                      minWidth: 16,
-                      textAlign: "right",
-                    }}
-                  >
+                  <span style={{ fontSize: 13, color: isSelected ? "rgba(255,255,255,0.8)" : "var(--text-secondary)" }}>
                     {list.reminderCount}
                   </span>
                 )}
               </div>
             );
           })}
+
+          {filteredLists.length === 0 && search && (
+            <div style={{ padding: "8px 16px", fontSize: 14, color: "var(--text-secondary)" }}>
+              검색 결과 없음
+            </div>
+          )}
         </div>
 
         {/* Add list button */}
-        <div
-          style={{
-            padding: "12px 16px",
-            borderTop: "1px solid var(--border)",
-          }}
-        >
+        <div style={{ padding: "12px 16px", borderTop: "1px solid var(--border)" }}>
           <button
             onClick={() => setShowCreateModal(true)}
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              color: "var(--accent-blue)",
-              fontSize: 15,
-              fontWeight: 500,
-              padding: 0,
+              display: "flex", alignItems: "center", gap: 8,
+              background: "transparent", border: "none", cursor: "pointer",
+              color: "var(--accent-blue)", fontSize: 15, fontWeight: 500, padding: 0,
             }}
           >
             <span style={{ fontSize: 20, lineHeight: 1 }}>+</span>
@@ -171,10 +217,7 @@ export default function Sidebar() {
       {/* Context menu */}
       {contextMenu && (
         <>
-          <div
-            onClick={() => setContextMenu(null)}
-            style={{ position: "fixed", inset: 0, zIndex: 999 }}
-          />
+          <div onClick={() => setContextMenu(null)} style={{ position: "fixed", inset: 0, zIndex: 999 }} />
           <div
             style={{
               position: "fixed",
@@ -194,13 +237,13 @@ export default function Sidebar() {
                 if (list) setEditingList(list);
                 setContextMenu(null);
               }}
-              style={contextMenuItemStyle}
+              style={ctxItemStyle}
             >
               편집
             </button>
             <button
               onClick={() => handleDeleteList(contextMenu.listId)}
-              style={{ ...contextMenuItemStyle, color: "var(--accent-red)" }}
+              style={{ ...ctxItemStyle, color: "var(--accent-red)" }}
             >
               삭제
             </button>
@@ -208,24 +251,18 @@ export default function Sidebar() {
         </>
       )}
 
-      {/* Create / Edit modal */}
       {(showCreateModal || editingList) && (
         <CreateListModal
           editing={editingList}
-          onClose={() => {
-            setShowCreateModal(false);
-            setEditingList(null);
-          }}
-          onSaved={async () => {
-            await refreshLists();
-          }}
+          onClose={() => { setShowCreateModal(false); setEditingList(null); }}
+          onSaved={async () => { await refreshLists(); }}
         />
       )}
     </>
   );
 }
 
-const contextMenuItemStyle: React.CSSProperties = {
+const ctxItemStyle: React.CSSProperties = {
   display: "block",
   width: "100%",
   textAlign: "left",
